@@ -17,9 +17,9 @@
 # limitations under the License.
 #
 
-default['munin']['sysadmin_email'] = "ops@example.com"
-default['munin']['server_role'] = 'monitoring'
-default['munin']['server_auth_method'] = 'openid'
+default['munin']['sysadmin_email'] = "jennifer.mitchell@tealium.com"
+default['munin']['server_role'] = 'munin'
+default['munin']['server_auth_method'] = 'htauth'
 
 default['munin']['web_server'] = 'apache'
 
@@ -44,7 +44,7 @@ when "freebsd"
   default['munin']['root']['group'] = "wheel"
 else
   default['munin']['basedir'] = "/etc/munin"
-  default['munin']['plugin_dir'] = "/usr/share/munin/plugins"
+  default['munin']['plugin_dir'] = "/usr/lib/munin/plugins"
   default['munin']['docroot'] = "/var/www/munin"
   default['munin']['dbdir'] = "/var/lib/munin"
   default['munin']['root']['group'] = "root"
