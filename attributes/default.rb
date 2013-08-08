@@ -17,37 +17,51 @@
 # limitations under the License.
 #
 
-default['munin']['sysadmin_email'] = "jennifer.mitchell@tealium.com"
-default['munin']['server_role'] = 'munin'
-default['munin']['server_auth_method'] = 'htauth'
+default['munin']['sysadmin_email'] = "ops@example.com"
+default['munin']['server_role'] = 'monitoring'
+default['munin']['server_auth_method'] = 'openid'
+default['munin']['multi_environment_monitoring'] = false
 
 default['munin']['web_server'] = 'apache'
+default['munin']['web_server_port'] = 80
+default['munin']['public_domain'] = nil
 
-case node[:platform]
+case node['platform']
 when "arch"
   default['munin']['basedir'] = "/etc/munin"
   default['munin']['plugin_dir'] = "/usr/share/munin/plugins"
   default['munin']['docroot'] = "/srv/http/munin"
   default['munin']['dbdir'] = "/var/lib/munin"
   default['munin']['root']['group'] = "root"
-when "centos","redhat","fedora","amazon"
+  default['munin']['service_name'] = "munin-node"
+when "centos","redhat","fedora","amazon", "scientific"
   default['munin']['basedir'] = "/etc/munin"
   default['munin']['plugin_dir'] = "/usr/share/munin/plugins"
   default['munin']['docroot'] = "/var/www/html/munin"
   default['munin']['dbdir'] = "/var/lib/munin"
   default['munin']['root']['group'] = "root"
+  default['munin']['service_name'] = "munin-node"
 when "freebsd"
   default['munin']['basedir'] = "/usr/local/etc/munin"
   default['munin']['plugin_dir'] = "/usr/local/share/munin/plugins"
   default['munin']['docroot'] = "/usr/local/www/munin"
   default['munin']['dbdir'] = "/usr/local/var/munin"
   default['munin']['root']['group'] = "wheel"
+  default['munin']['service_name'] = "munin-node"
+when "smartos"
+  default['munin']['basedir'] = "/opt/local/etc/munin"
+  default['munin']['plugin_dir'] = "/opt/local/lib/munin/plugins"
+  default['munin']['docroot'] = "/var/www/html/munin"
+  default['munin']['dbdir'] = "/var/lib/munin"
+  default['munin']['root']['group'] = "root"
+  default['munin']['service_name'] = "munin"
 else
   default['munin']['basedir'] = "/etc/munin"
   default['munin']['plugin_dir'] = "/usr/lib/munin/plugins"
   default['munin']['docroot'] = "/var/www/munin"
   default['munin']['dbdir'] = "/var/lib/munin"
   default['munin']['root']['group'] = "root"
+  default['munin']['service_name'] = "munin-node"
 end
 
 default['munin']['plugins'] = "#{default['munin']['basedir']}/plugins"

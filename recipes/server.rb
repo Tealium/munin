@@ -17,16 +17,35 @@
 # limitations under the License.
 #
 
-web_srv = node[:munin][:web_server].to_sym
+unless node['munin']['public_domain']
+  if node['public_domain']
+    case node.chef_environment
+    when "production"
+      public_domain = node['public_domain']
+    else
+      if node['munin']['multi_environment_monitoring']
+        public_domain = node['public_domain']
+      else
+        env = node.chef_environment =~ /_default/ ? "default" : node.chef_environment
+        public_domain = "#{env}.#{node['public_domain']}"
+      end
+    end
+  else
+    public_domain = node['domain']
+  end
+  node.set['munin']['public_domain'] = "munin.#{public_domain}"
+end
+
+web_srv = node['munin']['web_server'].to_sym
 case web_srv
 when :apache
   include_recipe 'munin::server_apache'
-  web_user = node[:apache][:user]
-  web_group = node[:apache][:group]
+  web_user = node['apache']['user']
+  web_group = node['apache']['group']
 when :nginx
   include_recipe 'munin::server_nginx'
-  web_user = node[:nginx][:user]
-  web_group = node[:nginx][:group]
+  web_user = node['nginx']['user']
+  web_group = node['nginx']['group']
 else
   raise "Unsupported web server type provided for munin. Supported: apache or nginx"
 end
@@ -34,7 +53,11 @@ end
 include_recipe "munin::client"
 
 sysadmins = search(:users, 'groups:sysadmin')
-munin_servers = search(:node, "munin:[* TO *] AND app_environment:#{node[:app_environment]} AND domain:#{node[:domain]}")
+if node['munin']['multi_environment_monitoring']
+  munin_servers = search(:node, "munin:[* TO *]")
+else  
+  munin_servers = search(:node, "munin:[* TO *] AND chef_environment:#{node.chef_environment}")
+end
 if munin_servers.empty?
   Chef::Log.info("No nodes returned from search, using this node so munin configuration has data")
   munin_servers = Array.new
@@ -43,25 +66,14 @@ end
 
 munin_servers.sort! { |a,b| a[:fqdn] <=> b[:fqdn] }
 
-if node[:public_domain]
-  case node.chef_environment
-  when "production"
-    public_domain = node[:public_domain]
-  else
-    public_domain = "#{node.chef_environment}.#{node[:public_domain]}"
-  end
-else
-  public_domain = node[:domain]
-end
-
-case node[:platform]
+case node['platform']
 when "freebsd"
   package "munin-master"
 else
   package "munin"
 end
 
-case node[:platform]
+case node['platform']
 when "arch"
   cron "munin-graph-html" do
     command "/usr/bin/munin-cron"

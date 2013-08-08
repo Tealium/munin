@@ -17,11 +17,17 @@
 # limitations under the License.
 #
 
-munin_servers = search(:node, "role:#{node['munin']['server_role']} AND chef_environment:#{node.chef_environment}")
+if node['munin']['multi_environment_monitoring']
+  munin_servers = search(:node, "role:#{node['munin']['server_role']}")
+else  
+  munin_servers = search(:node, "role:#{node['munin']['server_role']} AND chef_environment:#{node.chef_environment}")
+end
 
 package "munin-node"
 
-service "munin-node" do
+service_name = node['munin']['service_name']
+
+service service_name do
   supports :restart => true
   action :enable
 end
@@ -30,13 +36,13 @@ template "#{node['munin']['basedir']}/munin-node.conf" do
   source "munin-node.conf.erb"
   mode 0644
   variables :munin_servers => munin_servers
-  notifies :restart, resources(:service => "munin-node")
+  notifies :restart, "service[#{service_name}]"
 end
 
-case node[:platform]
-when "arch"
+case node['platform']
+when "arch", "smartos"
   execute "munin-node-configure --shell | sh" do
     not_if { Dir.entries(node['munin']['plugins']).length > 2 }
-    notifies :restart, "service[munin-node]"
+    notifies :restart, "service[#{service_name}]"
   end
 end
