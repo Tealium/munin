@@ -56,7 +56,7 @@ sysadmins = search(:users, 'groups:sysadmin')
 if node['munin']['multi_environment_monitoring']
   munin_servers = search(:node, "munin:[* TO *]")
 else  
-  munin_servers = search(:node, "munin:[* TO *] AND chef_environment:#{node.chef_environment}")
+  munin_servers = search(:node, "munin:[* TO *] AND ipaddress:10.1.* AND (chef_environment:production OR chef_environment:production_dc_*)")
 end
 if munin_servers.empty?
   Chef::Log.info("No nodes returned from search, using this node so munin configuration has data")
